@@ -7,4 +7,8 @@ import org.litepal.crud.DataSupport
  * @author: haishan
  * @Date: 2020/9/5
  */
-data class Province(var id: Int?, var provinceName: String?, var provinceCode: Int?) : DataSupport()
+data class Province(
+        var id: Int = 0,
+        var provinceName: String = "",
+        var provinceCode: Int = 0
+) : DataSupport()
