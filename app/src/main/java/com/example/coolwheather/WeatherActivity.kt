@@ -3,6 +3,8 @@ package com.example.coolwheather
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.LayoutInflater
@@ -10,6 +12,7 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.example.coolwheather.bean.Weather
 import com.example.coolwheather.util.HttpUtil
 import com.example.coolwheather.util.Utility
@@ -36,9 +39,16 @@ class WeatherActivity : AppCompatActivity() {
 
         const val WEATHER_ID = "weather_id"
         const val SP_WEATHER = "weather"
+        const val SP_BINGPIC = "biying_pic"
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= 21) {
+            val decorView = window.decorView
+            decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            window.statusBarColor = Color.TRANSPARENT
+        }
+
         setContentView(R.layout.activity_weather)
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
@@ -51,6 +61,37 @@ class WeatherActivity : AppCompatActivity() {
             weather_layout.visibility = View.INVISIBLE
             requestWeather(weatherId)
         }
+
+        val biyingPic = prefs.getString(SP_BINGPIC, null)
+        if (!biyingPic.isNullOrEmpty()) {
+            Glide.with(this).load(biyingPic).into(bing_pic_img)
+        } else {
+            loadBingPic()
+        }
+    }
+
+    /**
+     * 获取背景图
+     */
+    private fun loadBingPic() {
+        val requestBiyingPic = "http://guolin.tech/api/bing_pic"
+        HttpUtil.sendOkHttpRequest(requestBiyingPic, object : Callback{
+            override fun onResponse(call: Call, response: Response) {
+                val biyingPic = response.body?.string()
+                val editor = PreferenceManager.getDefaultSharedPreferences(applicationContext).edit()
+                editor.putString(SP_BINGPIC, biyingPic)
+                editor.apply()
+                runOnUiThread {
+                    Glide.with(applicationContext).load(biyingPic).into(bing_pic_img)
+                }
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    bing_pic_img.setBackgroundColor(resources.getColor(R.color.colorPrimary))
+                }
+            }
+        })
     }
 
     /**
