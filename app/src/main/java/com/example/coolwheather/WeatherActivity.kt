@@ -1,13 +1,11 @@
 package com.example.coolwheather
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.SharedPreferences
+import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
@@ -16,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import com.bumptech.glide.Glide
 import com.example.coolwheather.bean.Weather
+import com.example.coolwheather.service.AutoUpdateService
 import com.example.coolwheather.util.HttpUtil
 import com.example.coolwheather.util.Utility
 import kotlinx.android.synthetic.main.activity_weather.*
@@ -28,7 +27,6 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import java.io.IOException
-import kotlin.math.max
 
 /**
  * @Description: 天气信息
@@ -45,6 +43,7 @@ class WeatherActivity : AppCompatActivity() {
         const val SP_WEATHER = "weather"
         const val SP_BINGPIC = "biying_pic"
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= 21) {
@@ -82,7 +81,7 @@ class WeatherActivity : AppCompatActivity() {
             requestWeather(mWeatherId)
         }
 
-        nav_button.setOnClickListener {drawer_layout.openDrawer(GravityCompat.START)}
+        nav_button.setOnClickListener { drawer_layout.openDrawer(GravityCompat.START) }
     }
 
     /**
@@ -90,10 +89,11 @@ class WeatherActivity : AppCompatActivity() {
      */
     private fun loadBingPic() {
         val requestBiyingPic = "http://guolin.tech/api/bing_pic"
-        HttpUtil.sendOkHttpRequest(requestBiyingPic, object : Callback{
+        HttpUtil.sendOkHttpRequest(requestBiyingPic, object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val biyingPic = response.body?.string()
-                val editor = PreferenceManager.getDefaultSharedPreferences(applicationContext).edit()
+                val editor =
+                    PreferenceManager.getDefaultSharedPreferences(applicationContext).edit()
                 editor.putString(SP_BINGPIC, biyingPic)
                 editor.apply()
                 runOnUiThread {
@@ -113,14 +113,16 @@ class WeatherActivity : AppCompatActivity() {
      * 请求天气数据
      */
     fun requestWeather(weatherId: String?) {
-        val weatherUrl = "http://guolin.tech./api/weather?cityid=${weatherId}&key=d3d303b7ab314add897857be7f3300e7"
-        HttpUtil.sendOkHttpRequest(weatherUrl, object : Callback{
+        val weatherUrl =
+            "http://guolin.tech./api/weather?cityid=${weatherId}&key=d3d303b7ab314add897857be7f3300e7"
+        HttpUtil.sendOkHttpRequest(weatherUrl, object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val reponseText = response.body?.string()
                 val weather = Utility.handleWeatherResponse(reponseText)
                 runOnUiThread {
                     if (weather != null && "ok" == weather.status) {
-                        val editor = PreferenceManager.getDefaultSharedPreferences(applicationContext).edit()
+                        val editor =
+                            PreferenceManager.getDefaultSharedPreferences(applicationContext).edit()
                         editor.putString(SP_WEATHER, reponseText)
                         editor.apply()
                         showWeatherInfo(weather)
@@ -152,7 +154,8 @@ class WeatherActivity : AppCompatActivity() {
             weather_info_text.text = now?.more?.info
             forecast_layout.removeAllViews()
             daily_forecast?.forEach {
-                val view = LayoutInflater.from(applicationContext).inflate(R.layout.forecast_item, forecast_layout, false)
+                val view =
+                    LayoutInflater.from(applicationContext).inflate(R.layout.forecast_item, forecast_layout, false)
                 val dateText = view.findViewById<TextView>(R.id.date_text)
                 val infoText = view.findViewById<TextView>(R.id.info_text)
                 val maxText = view.findViewById<TextView>(R.id.max_text)
@@ -172,6 +175,8 @@ class WeatherActivity : AppCompatActivity() {
             car_wash_text.text = "洗车指数：${suggestion?.carWash?.info}"
             sport_text.text = "运动建议：${suggestion?.sport?.info}"
             weather_layout.visibility = View.VISIBLE
+            val intent = Intent(applicationContext, AutoUpdateService::class.java)
+            startService(intent)
         }
     }
 }
