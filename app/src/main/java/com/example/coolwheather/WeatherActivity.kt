@@ -7,11 +7,13 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
 import com.bumptech.glide.Glide
 import com.example.coolwheather.bean.Weather
 import com.example.coolwheather.util.HttpUtil
@@ -34,6 +36,8 @@ import kotlin.math.max
  * @Date: 2020/9/7
  */
 class WeatherActivity : AppCompatActivity() {
+    //天气id
+    private var mWeatherId: String? = null
 
     companion object {
 
@@ -50,16 +54,17 @@ class WeatherActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_weather)
-
+        swipe_refresh.setColorSchemeResources(R.color.colorPrimary)
         val prefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
         val weatherString = prefs.getString(SP_WEATHER, null)
         if (!weatherString.isNullOrEmpty()) {
             val weather = Utility.handleWeatherResponse(weatherString)
+            mWeatherId = weather?.basic?.weatherId
             showWeatherInfo(weather)
         } else {
-            val weatherId = intent.getStringExtra(WEATHER_ID)
+            mWeatherId = intent.getStringExtra(WEATHER_ID)
             weather_layout.visibility = View.INVISIBLE
-            requestWeather(weatherId)
+            requestWeather(mWeatherId)
         }
 
         val biyingPic = prefs.getString(SP_BINGPIC, null)
@@ -68,6 +73,16 @@ class WeatherActivity : AppCompatActivity() {
         } else {
             loadBingPic()
         }
+
+        initListener()
+    }
+
+    private fun initListener() {
+        swipe_refresh.setOnRefreshListener {
+            requestWeather(mWeatherId)
+        }
+
+        nav_button.setOnClickListener {drawer_layout.openDrawer(GravityCompat.START)}
     }
 
     /**
@@ -97,7 +112,7 @@ class WeatherActivity : AppCompatActivity() {
     /**
      * 请求天气数据
      */
-    private fun requestWeather(weatherId: String?) {
+    fun requestWeather(weatherId: String?) {
         val weatherUrl = "http://guolin.tech./api/weather?cityid=${weatherId}&key=d3d303b7ab314add897857be7f3300e7"
         HttpUtil.sendOkHttpRequest(weatherUrl, object : Callback{
             override fun onResponse(call: Call, response: Response) {
@@ -112,12 +127,14 @@ class WeatherActivity : AppCompatActivity() {
                     } else {
                         Toast.makeText(applicationContext, "获取天气信息失败", Toast.LENGTH_SHORT).show()
                     }
+                    swipe_refresh.isRefreshing = false
                 }
             }
 
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
                     Toast.makeText(applicationContext, "获取天气信息失败", Toast.LENGTH_SHORT).show()
+                    swipe_refresh.isRefreshing = false
                 }
             }
         })
