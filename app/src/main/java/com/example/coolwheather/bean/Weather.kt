@@ -9,11 +9,11 @@ import com.google.gson.annotations.SerializedName
  */
 data class Weather(
         var status: String,
-        var bisic: Basic? = null,
+        var basic: Basic? = null,
         var aqi: AQI? = null,
         var now: Now? = null,
         var suggestion: Suggestion? = null,
-        var forecastList: MutableList<Forecast>? = null
+        var daily_forecast: MutableList<Forecast>? = null
 )
 
 data class Basic(
@@ -33,7 +33,7 @@ data class AQI(
         var city: AQICity? = null
 )
 
-data class AQICity(var api: String, var pm25: String)
+data class AQICity(var aqi: String, var pm25: String)
 
 data class Now(
         @SerializedName("tmp")
@@ -59,7 +59,7 @@ data class CarWash(@SerializedName("txt") var info: String? = null)
 data class Sport(@SerializedName("txt") var info: String? = null)
 
 data class Forecast(
-        var data: String? = null,
+        var date: String? = null,
         @SerializedName("tmp")
         var temperature: Temperature? = null,
         @SerializedName("cond")

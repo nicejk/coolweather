@@ -1,10 +1,13 @@
 package com.example.coolwheather.util
 
+import com.example.coolwheather.bean.Weather
 import com.example.coolwheather.db.City
 import com.example.coolwheather.db.County
 import com.example.coolwheather.db.Province
+import com.google.gson.Gson
 import org.json.JSONArray
 import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * @Description: 解析处理数据工具类
@@ -79,6 +82,23 @@ class Utility {
                 }
             }
             return false
+        }
+
+        /**
+         * 将返回的JSON数据解析成Weather实体类
+         */
+        fun handleWeatherResponse(response: String?): Weather? {
+            if (!response.isNullOrEmpty()) {
+                try {
+                    val jsonObject = JSONObject(response)
+                    val jsonArray = jsonObject.getJSONArray("HeWeather")
+                    val weatherContent = jsonArray.getJSONObject(0).toString()
+                    return Gson().fromJson(weatherContent, Weather::class.java)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+            return null
         }
     }
 }

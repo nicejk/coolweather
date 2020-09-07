@@ -1,5 +1,6 @@
 package com.example.coolwheather
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -56,6 +57,8 @@ class ChooseAreaFragment : Fragment() {
         const val TYPE_PROVINCE = "province"
         const val TYPE_CITY = "city"
         const val TYPE_COUNTY = "county"
+
+        const val WEATHER_ID = "weather_id"
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -79,6 +82,12 @@ class ChooseAreaFragment : Fragment() {
             } else if (mCurrentLevel == LEVEL_CITY) {
                 mSelectedCity = mCityList?.get(position)
                 queryCounties()
+            } else if (mCurrentLevel == LEVEL_COUNTY) {
+                val weatherId = mCountyList?.get(position)?.weatherId
+                val intent = Intent(activity, WeatherActivity::class.java)
+                intent.putExtra(WEATHER_ID, weatherId)
+                startActivity(intent)
+                activity?.finish()
             }
         }
 
